@@ -2,83 +2,110 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloudflare Database Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cloudflare D1 Demo</title>
+
   <style>
-    body {
+    body{
       font-family: Arial, sans-serif;
-      margin: 40px;
-      background-color: #f9f9f9;
+      margin:40px;
+      background:#f5f5f5;
     }
-    h1 {
-      color: #222;
+
+    h1{
+      color:#222;
     }
-    input {
-      padding: 8px;
-      margin-right: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+
+    input{
+      padding:10px;
+      margin-right:10px;
+      margin-bottom:10px;
+      width:250px;
     }
-    button {
-      padding: 8px 12px;
-      background-color: #0078d4;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+
+    button{
+      padding:10px 15px;
+      background:#0070f3;
+      color:white;
+      border:none;
+      cursor:pointer;
     }
-    button:hover {
-      background-color: #005fa3;
+
+    ul{
+      padding:0;
     }
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    li {
-      background: #fff;
-      margin: 6px 0;
-      padding: 10px;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+    li{
+      list-style:none;
+      background:white;
+      margin:10px 0;
+      padding:10px;
+      border-radius:5px;
     }
   </style>
 </head>
 <body>
-  <h1>Add Record</h1>
-  <input id="name" placeholder="Name" />
-  <input id="email" placeholder="Email" />
-  <button onclick="addRecord()">Add</button>
 
-  <h2>Stored Records:</h2>
+  <h1>Cloudflare D1 Database Demo</h1>
+
+  <input type="text" id="name" placeholder="Enter Name">
+  <input type="email" id="email" placeholder="Enter Email">
+
+  <button onclick="addRecord()">Add Record</button>
+
+  <h2>Stored Records</h2>
+
   <ul id="records"></ul>
 
   <script>
-    const WORKER_URL = "https://cloudflaredb-pages.yasir-ali.workers.dev";
 
-    async function addRecord() {
-      const name = document.getElementById("name").value.trim();
-      const email = document.getElementById("email").value.trim();
-      if (!name || !email) return alert("Please enter both name and email.");
+    // IMPORTANT:
+    // Replace with YOUR worker URL
+    const API_URL = "https://vss-lab.YOUR_USERNAME.workers.dev";
 
-      await fetch(`${WORKER_URL}/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email })
+    async function addRecord(){
+
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+
+      if(!name || !email){
+        alert("Please fill all fields");
+        return;
+      }
+
+      await fetch(`${API_URL}/add`,{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({name,email})
       });
 
       document.getElementById("name").value = "";
       document.getElementById("email").value = "";
+
       loadRecords();
     }
 
-    async function loadRecords() {
-      const res = await fetch(`${WORKER_URL}/list`);
-      const data = await res.json();
-      const container = document.getElementById("records");
-      container.innerHTML = data.map(r => `<li><strong>${r.email}</strong></li>`).join("");
+    async function loadRecords(){
+
+      const response = await fetch(`${API_URL}/list`);
+
+      const data = await response.json();
+
+      const records = document.getElementById("records");
+
+      records.innerHTML = data.map(user => `
+        <li>
+          <strong>${user.name}</strong><br>
+          ${user.email}
+        </li>
+      `).join("");
     }
 
     loadRecords();
+
   </script>
+
 </body>
 </html>
