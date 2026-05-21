@@ -1,12 +1,8 @@
-name = "cloudflaredb-pages"
+name = "vss-lab"
 main = "worker.js"
-compatibility_date = "2026-05-20"
+compatibility_date = "2026-05-17"
 
-[durable_objects]
-bindings = [
-  { name = "MyDatabase", class_name = "MyDatabase" }
-]
-
-[[migrations]]
-tag = "v1"
-new_sqlite_classes = ["MyDatabase"]
+[[d1_databases]]
+binding = "DB"
+database_name = "vss"
+database_id = "e2b09532-d5a7-45c3-b20b-b25c6143bf29"
