@@ -1,42 +1,67 @@
 export default {
+
   async fetch(request, env) {
-    const url = new URL(request.url);
-    const id = env.MyDatabase.idFromName("main");
-    const obj = env.MyDatabase.get(id);
 
-    // Serve your Cloudflare Pages site at root
-    if (url.pathname === "/") {
-      const page = await fetch("https://cloudflaredb-pages.yasir-ali.workers.dev"); // ← replace with your Pages URL if different
-      const html = await page.text();
-      return new Response(html, { headers: { "content-type": "text/html" } });
-    }
-
-    // Forward other routes to Durable Object
-    return obj.fetch(request);
-  }
-}
-
-export class MyDatabase {
-  constructor(state, env) {
-    this.storage = state.storage;
-  }
-
-  async fetch(request) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/add") {
-      const { name, email } = await request.json();
-      await this.storage.put(name, { email });
-      return new Response("Added successfully");
+    // CREATE TABLE
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT
+      )
+    `).run();
+
+
+    // ADD RECORD
+    if(url.pathname === "/add" && request.method === "POST"){
+
+      const body = await request.json();
+
+      const { name, email } = body;
+
+      await env.DB.prepare(`
+        INSERT INTO users (name, email)
+        VALUES (?, ?)
+      `)
+      .bind(name, email)
+      .run();
+
+      return new Response(
+        JSON.stringify({
+          success:true
+        }),
+        {
+          headers:{
+            "Content-Type":"application/json"
+          }
+        }
+      );
     }
 
-    if (url.pathname === "/list") {
-      const entries = await this.storage.list();
-      return new Response(JSON.stringify([...entries.values()]), {
-        headers: { "content-type": "application/json" }
-      });
+
+    // GET RECORDS
+    if(url.pathname === "/list"){
+
+      const { results } = await env.DB.prepare(`
+        SELECT * FROM users
+        ORDER BY id DESC
+      `).all();
+
+      return new Response(
+        JSON.stringify(results),
+        {
+          headers:{
+            "Content-Type":"application/json"
+          }
+        }
+      );
     }
 
-    return new Response("Not found", { status: 404 });
+
+    return new Response("Worker Running Successfully");
+
   }
+
 }
